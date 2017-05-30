@@ -12,6 +12,8 @@
 GLFWwindow *window;
 GLFWmonitor *monitor;
 const GLFWvidmode *mode;
+GLint uniform_window_size;
+GLuint prog;
 
 static void key_callback(GLFWwindow* window, int key /*glfw*/, int scancode, int action, int mods) {
   if (key == GLFW_KEY_ESCAPE) {
@@ -20,7 +22,9 @@ static void key_callback(GLFWwindow* window, int key /*glfw*/, int scancode, int
 }
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+  glUseProgram(prog);
   glViewport(0, 0, width, height);
+  glUniform2f(uniform_window_size, width, height);
 }
 void info() {
   printf("OpenGL          %s\n", glGetString(GL_VERSION));
@@ -124,7 +128,7 @@ int main(int argc, char *argv[]) {
   //glfwSetWindowUserPointer(window, app);
   glfwSwapInterval(1);
   glfwSetKeyCallback(window, key_callback);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  //glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   info();
 
@@ -138,16 +142,19 @@ int main(int argc, char *argv[]) {
   glGetShaderiv(frag_shader_id, GL_COMPILE_STATUS, &status);
   gl_shader_info_log(stdout, frag_shader_id);
 
-  GLuint prog = glCreateProgram();
+  prog = glCreateProgram();
   glAttachShader(prog, frag_shader_id);
   glLinkProgram(prog);
-
+  uniform_window_size = glGetUniformLocation(prog, "window_size");
   glUseProgram(prog);
+  glUniform2f(uniform_window_size, width, height);
   gl_program_info_log(stderr, prog);
+
+  //glViewport(0, 0, width, height);
 
   float lastTime = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
-
+    //glUseProgram(prog);
     glClearColor(0.2, 0.2, 0.2, 0.2);
     glClear(GL_COLOR_BUFFER_BIT);
     glRecti(-1,-1,1,1);
