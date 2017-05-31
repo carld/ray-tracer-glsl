@@ -13,6 +13,7 @@ GLFWwindow *window;
 GLFWmonitor *monitor;
 const GLFWvidmode *mode;
 GLint uniform_window_size;
+GLint uniform_random_seed;
 GLuint prog;
 
 static void key_callback(GLFWwindow* window, int key /*glfw*/, int scancode, int action, int mods) {
@@ -98,7 +99,7 @@ void gl_program_info_log(FILE *fp, GLuint prog) {
 
 int main(int argc, char *argv[]) {
 
-  int width = 640, height = 320;
+  int width = 600, height = 300;
   const char *shader_file = "fragment.glsl";
   if (!glfwInit()) {
     puts("Could not init glfw");
@@ -146,15 +147,16 @@ int main(int argc, char *argv[]) {
   glAttachShader(prog, frag_shader_id);
   glLinkProgram(prog);
   uniform_window_size = glGetUniformLocation(prog, "window_size");
+  uniform_random_seed = glGetUniformLocation(prog, "random_seed");
   glUseProgram(prog);
   glUniform2f(uniform_window_size, width, height);
+  uint _random_seed = arc4random();
+  printf("Random seed: %ld\n", _random_seed);
+  glUniform1f(uniform_random_seed, _random_seed);
   gl_program_info_log(stderr, prog);
-
-  //glViewport(0, 0, width, height);
 
   float lastTime = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
-    //glUseProgram(prog);
     glClearColor(0.2, 0.2, 0.2, 0.2);
     glClear(GL_COLOR_BUFFER_BIT);
     glRecti(-1,-1,1,1);
@@ -164,6 +166,7 @@ int main(int argc, char *argv[]) {
     if (glfwGetTime() > lastTime + 1.0) {
       lastTime = glfwGetTime();
     }
+    usleep(100000);
   }
 
   glfwDestroyWindow(window);
