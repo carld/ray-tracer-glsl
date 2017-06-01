@@ -9,17 +9,57 @@
 
 #include <GLFW/glfw3.h>
 
+#include "camera.h"
+
+int width = 600, height = 300;
 GLFWwindow *window;
 GLFWmonitor *monitor;
 const GLFWvidmode *mode;
+GLuint prog;
 GLint uniform_window_size;
 GLint uniform_random_seed;
-GLuint prog;
+
+GLint uniform_camera_origin;
+GLint uniform_camera_lower_left_corner;
+GLint uniform_camera_horizontal;
+GLint uniform_camera_vertical;
+GLint uniform_camera_lens_radius;
+
+struct camera cam;
+vec3 lookfrom = (vec3) {.x=5, .y=1, .z=5};
+vec3 lookat   = (vec3) {.x=0, .y=0, .z=-1};
+float dist_to_focus;
+float aperture = 0.1;
+
+void update_camera(struct camera *c) {
+  /* reposition the camera */
+  dist_to_focus = vec3_length(vec3_subtract_vec(lookfrom, lookat));
+  camera_pos(&cam, lookfrom, lookat, (vec3){.x=0,.y=1,.z=0}, 20, (float)width/(float)height, aperture, dist_to_focus);
+
+  glUniform3f(uniform_camera_origin, cam.origin.x, cam.origin.y, cam.origin.z);
+  glUniform3f(uniform_camera_lower_left_corner, cam.lower_left_corner.x, cam.lower_left_corner.y, cam.lower_left_corner.z);
+  glUniform3f(uniform_camera_horizontal, cam.horizontal.x, cam.horizontal.y, cam.horizontal.z);
+  glUniform3f(uniform_camera_vertical, cam.vertical.x, cam.vertical.y, cam.vertical.z);
+  glUniform1f(uniform_camera_lens_radius, cam.lens_radius);
+}
 
 static void key_callback(GLFWwindow* window, int key /*glfw*/, int scancode, int action, int mods) {
-  if (key == GLFW_KEY_ESCAPE) {
+  switch(key){
+  case GLFW_KEY_ESCAPE:
     glfwSetWindowShouldClose(window, 1);
+    break;
+  case GLFW_KEY_A:
+    break;
+  case GLFW_KEY_B:
+    break;
+  case GLFW_KEY_S:
+    lookfrom.z /= 2;
+    break;
+  case GLFW_KEY_W:
+    lookfrom.z *= 2;
+    break;
   }
+  update_camera(&cam);
 }
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -99,7 +139,6 @@ void gl_program_info_log(FILE *fp, GLuint prog) {
 
 int main(int argc, char *argv[]) {
 
-  int width = 600, height = 300;
   const char *shader_file = "fragment.glsl";
   if (!glfwInit()) {
     puts("Could not init glfw");
@@ -146,20 +185,34 @@ int main(int argc, char *argv[]) {
   prog = glCreateProgram();
   glAttachShader(prog, frag_shader_id);
   glLinkProgram(prog);
+
+  glUseProgram(prog);
+
   uniform_window_size = glGetUniformLocation(prog, "window_size");
   uniform_random_seed = glGetUniformLocation(prog, "random_seed");
-  glUseProgram(prog);
+  uniform_camera_origin = glGetUniformLocation(prog, "camera_origin");
+  uniform_camera_lower_left_corner = glGetUniformLocation(prog, "camera_lower_left_corner");
+  uniform_camera_horizontal = glGetUniformLocation(prog, "camera_horizontal");
+  uniform_camera_vertical = glGetUniformLocation(prog, "camera_vertical");
+  uniform_camera_lens_radius = glGetUniformLocation(prog, "camera_lens_radius");
+
+
+
   glUniform2f(uniform_window_size, width, height);
   uint _random_seed = arc4random();
-  printf("Random seed: %ld\n", _random_seed);
+  printf("Random seed: %ud\n", _random_seed);
   glUniform1f(uniform_random_seed, _random_seed);
+
+  /* calculate the camera position. camera info is passed shader via uniforms */
+  update_camera(&cam);
+
   gl_program_info_log(stderr, prog);
 
   float lastTime = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
-    glClearColor(0.2, 0.2, 0.2, 0.2);
+    glClearColor(0.2, 1.0, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
-    glRecti(-1,-1,1,1);
+    glRecti(-1,-1,1,1); /* fragment shader is not run unless there's vertices in OpenGL 2? */
     glfwSwapBuffers(window);
     glfwPollEvents();
 

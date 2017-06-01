@@ -13,7 +13,7 @@ ifeq (Linux,$(PLATFORM))
 endif
 
 ifeq (Darwin,$(PLATFORM))
-	CFLAGS += -DDARWIN=1
+	CFLAGS += -DDARWIN=1 -O3
 	CFLAGS += -I/usr/local/include/GLFW
 	LFLAGS += -L/usr/local/lib
 	GLFW_TAG = 3.2.1
