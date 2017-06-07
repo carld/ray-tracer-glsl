@@ -54,10 +54,10 @@ Material lambert    = Material(vec3(0.8, 0.8, 0.0),    0.0, 0.0, mat_lambert);
 
 Sphere world[] = Sphere[](
   Sphere(vec3(1,0,-1), 0.5, gray_metal),
-  Sphere(vec3(-1,0,-1), 0.5, gold_metal),
-  Sphere(vec3(0,0,1), 0.5, dielectric),
-  Sphere(vec3(0,0,1), -0.45, dielectric),
-  Sphere(vec3(0,-100.5,-1), 100, lambert)
+  Sphere(vec3(-1,0,-1), 0.5, gold_metal)
+//  Sphere(vec3(0,0,1), 0.5, dielectric),
+  //Sphere(vec3(0,0,1), -0.45, dielectric),
+//  Sphere(vec3(0,-100.5,-1), 100, lambert)
 );
 
 /* returns a varying number between 0 and 1 */
@@ -203,6 +203,16 @@ bool sphere_hit(Sphere sp, Ray r, float t_min, float t_max, out HitRecord hit) {
   return false;
 }
 
+bool plane_hit(Ray r, float t_min, float t_max, out HitRecord hit) {
+  float t = (-0.5 - r.origin.y) / r.direction.y;
+  if (t < t_min || t > t_max) return false;
+  hit.t = t;
+  hit.p = point_at_parameter(r, t);
+  hit.mat = gray_metal;
+  hit.normal = vec3(0, 1, 0);
+  return true;
+}
+
 /* Check all objects in world for hit with ray */
 bool world_hit(Ray r, float t_min, float t_max, out HitRecord hit) {
   HitRecord temp_hit;
@@ -216,6 +226,11 @@ bool world_hit(Ray r, float t_min, float t_max, out HitRecord hit) {
       closest_so_far = temp_hit.t;
     }
   }
+  if (plane_hit(r, t_min, closest_so_far, temp_hit)) {
+    hit_anything = true;
+    hit = temp_hit;
+  }
+
   return hit_anything;
 }
 
@@ -224,7 +239,7 @@ vec3 color(Ray r) {
   vec3 col = vec3(0, 0, 0); /* visible color */
   vec3 total_attenuation = vec3(1.0, 1.0, 1.0); /* reduction of light transmission */
 
-  for (int bounce = 0; bounce < 16; bounce++) {
+  for (int bounce = 0; bounce < 4; bounce++) {
 
     if (world_hit(r, 0.001, 1.0 / 0.0, hit)) {
       /* create a new reflected ray */
@@ -252,7 +267,7 @@ void main() {
     vec3 col = vec3(0,0,0);
     float u, v;
     Ray r;
-    const int nsamples = 20;
+    const int nsamples = 16;
     for (int s = 0; s < nsamples; s++) {
       u = (gl_FragCoord.x + drand48(col.xy + s)) / window_size.x;
       v = (gl_FragCoord.y + drand48(col.xz + s)) / window_size.y;

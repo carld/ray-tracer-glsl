@@ -27,15 +27,22 @@ GLint uniform_camera_vertical;
 GLint uniform_camera_lens_radius;
 
 struct camera cam;
-vec3 lookfrom = (vec3) {.x=5, .y=1, .z=5};
-vec3 lookat   = (vec3) {.x=0, .y=0, .z=-1};
+vec3 lookfrom = (vec3) {.x=0, .y=0, .z=5};
+vec3 lookat   = (vec3) {.x=0, .y=0, .z=0};
 float dist_to_focus;
 float aperture = 0.1;
 
 void update_camera(struct camera *c) {
   /* reposition the camera */
   dist_to_focus = vec3_length(vec3_subtract_vec(lookfrom, lookat));
-  camera_pos(&cam, lookfrom, lookat, (vec3){.x=0,.y=1,.z=0}, 20, (float)width/(float)height, aperture, dist_to_focus);
+  camera_pos(&cam,
+      lookfrom,
+      lookat,
+      (vec3){.x=0,.y=1,.z=0},
+      45,
+      (float)width/(float)height,
+      aperture,
+      dist_to_focus);
 
   glUniform3f(uniform_camera_origin, cam.origin.x, cam.origin.y, cam.origin.z);
   glUniform3f(uniform_camera_lower_left_corner, cam.lower_left_corner.x, cam.lower_left_corner.y, cam.lower_left_corner.z);
