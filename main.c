@@ -18,6 +18,7 @@ const GLFWvidmode *mode;
 GLuint prog;
 GLint uniform_window_size;
 GLint uniform_random_seed;
+GLint uniform_global_time;
 
 GLint uniform_camera_origin;
 GLint uniform_camera_lower_left_corner;
@@ -195,8 +196,7 @@ int main(int argc, char *argv[]) {
   uniform_camera_horizontal = glGetUniformLocation(prog, "camera_horizontal");
   uniform_camera_vertical = glGetUniformLocation(prog, "camera_vertical");
   uniform_camera_lens_radius = glGetUniformLocation(prog, "camera_lens_radius");
-
-
+  uniform_global_time = glGetUniformLocation(prog, "global_time");
 
   glUniform2f(uniform_window_size, width, height);
   uint _random_seed = arc4random();
@@ -210,6 +210,9 @@ int main(int argc, char *argv[]) {
 
   float lastTime = glfwGetTime();
   while (!glfwWindowShouldClose(window)) {
+
+    glUniform1f(uniform_global_time, glfwGetTime());
+
     glClearColor(0.2, 1.0, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glRecti(-1,-1,1,1); /* fragment shader is not run unless there's vertices in OpenGL 2? */
